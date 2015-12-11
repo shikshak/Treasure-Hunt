@@ -1,2 +1,1 @@
-# Treasure-Hunt
-Our mini project
+ project
