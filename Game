@@ -1,0 +1,85 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Game {
+	
+  static Skin[][] map;
+ 	static int maplength=3;
+ 	static int mapwidth=3;
+
+ 	public static void main(String[] args) {
+		   
+	   //init arrays (map)
+	   map = new Skin[maplength][mapwidth];
+	   for (int i=0; i<maplength; i++){
+		   for (int j=0; j<mapwidth; j++){
+			 map[i][j]=new Skin();
+		 }
+	   }
+		 	
+		//reading the map
+	 	Game obj = new Game();
+	 	obj.run();
+	 	
+	 	//affichage console map
+	 	for (int i=0;i<maplength;i++){
+			   for (int j=0; j<mapwidth;j++){
+				   System.out.print(map[i][j].test +" ");
+			   }
+			   System.out.println();
+	 	}
+
+	   }
+
+	   public void run() {
+
+	 	String csvFile = "/Users/User/Desktop/2nd year/info/mini projet/Treasure Hunt/map.csv";
+	 	BufferedReader br = null;
+	 	String line = "";
+	 	String cvsSplitBy = ";";
+	 	int j=0;
+
+	 	try {
+	 		br = new BufferedReader(new FileReader(csvFile));
+	 				while ((line = br.readLine()) != null) {
+	 					String[] what = line.split(cvsSplitBy);
+	 					for(int i=0; i<mapwidth;i++){
+	 						 switch(what[i]){
+	 						 case "0":	map[j][i]=new Box() ;
+	 						 			break;
+	 						 case "1":	map[j][i]=new Character() ;
+	 									break;
+	 						 case "2":	map[j][i]=new Unmoveable(0) ;
+	 									break;
+	 						 case "3":	map[j][i]=new  Unmoveable(1) ;
+	 									break;
+	 						 case "4":	map[j][i]=new  Unmoveable(2);
+	 									break;
+	 						 default: map[j][i]=new Skin();
+	 						 }
+	 					 
+	 						System.out.print(what[i]+" "+map[j][i].test+"  ");
+	 					}
+	 					System.out.println();
+	 					j++;
+	 				}
+	 	} catch (FileNotFoundException e) {
+	 		e.printStackTrace();
+	 	} catch (IOException e) {
+	 		e.printStackTrace();
+	 	} finally {
+	 		if (br != null) {
+	 			try {
+	 				br.close();
+	 			} catch (IOException e) {
+	 				e.printStackTrace();
+	 			}
+	 		}
+	 	}
+
+	 	System.out.println("Done");
+	   
+	   }
+}
