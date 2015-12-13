@@ -1,0 +1,19 @@
+
+public class Unmoveable extends Skin {
+
+	
+	public Unmoveable() {
+		// TODO Auto-generated constructor stub
+	}
+	public Unmoveable (int i){
+		switch(i){
+		case 0: /*image=***********/ test="grass";
+			break;
+		case 1: /*image=***********/ test="wall*";
+			break;
+		case 2: /*image=***********/ test="path*";
+			break;
+		}
+	}
+
+}
