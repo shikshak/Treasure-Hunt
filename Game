@@ -1,45 +1,50 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.*;
+import java.io.*;
+import java.awt.geom.*;
+import java.awt.image.*;
 
-public class Game {
+
+public class Game extends JFrame implements ActionListener, KeyListener {
 	
-  static Skin[][] map;
- 	static int maplength=3;
- 	static int mapwidth=3;
-
- 	public static void main(String[] args) {
-		   
-	   //init arrays (map)
-	   map = new Skin[maplength][mapwidth];
-	   for (int i=0; i<maplength; i++){
-		   for (int j=0; j<mapwidth; j++){
-			 map[i][j]=new Skin();
-		 }
-	   }
-		 	
-		//reading the map
-	 	Game obj = new Game();
-	 	obj.run();
-	 	
-	 	//affichage console map
-	 	for (int i=0;i<maplength;i++){
-			   for (int j=0; j<mapwidth;j++){
-				   System.out.print(map[i][j].test +" ");
-			   }
-			   System.out.println();
-	 	}
-
-	   }
-
-	   public void run() {
-
-	 	String csvFile = "/Users/User/Desktop/2nd year/info/mini projet/Treasure Hunt/map.csv";
+	static Skin[][] map;
+	static int maplength=6;
+ 	static int mapwidth=6;
+ 	
+ 	Rectangle ecran;
+ 	Skin player;
+ 	Skin[] boxes;
+ 	int nbBoxes=0;
+ 	
+ 	int nbChar=0;
+ 	
+ 	boolean toucheLeft;
+	boolean toucheRight;
+	boolean toucheEspace;
+	boolean toucheDown;
+	boolean toucheUp;
+	boolean move=false;
+	 
+	public Game(){
+		this.setLayout(null);
+		this.setResizable(false);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setBounds(50,50,600,600);
+		
+		ecran = new Rectangle(0,0,getSize().width,getSize().height);
+		
+		map = new Skin[maplength][mapwidth];
+		
+		//Toolkit T = Toolkit.getDefaultToolkit();
+		
+		String csvFile = "map.csv";
 	 	BufferedReader br = null;
 	 	String line = "";
 	 	String cvsSplitBy = ";";
 	 	int j=0;
+	 	
+	 	boxes=new Box[maplength*mapwidth];
 
 	 	try {
 	 		br = new BufferedReader(new FileReader(csvFile));
@@ -47,17 +52,43 @@ public class Game {
 	 					String[] what = line.split(cvsSplitBy);
 	 					for(int i=0; i<mapwidth;i++){
 	 						 switch(what[i]){
-	 						 case "0":	map[j][i]=new Box() ;
+	 						 case "0":	map[j][i]=new Unmoveable(0);
+	 						map[j][i].actif=true;
+	 						map[j][i].x= 100*i;
+	 						map[j][i].y= 100*j;
+	 						boxes[nbBoxes]=new Box();
+	 						boxes[nbBoxes].x= 100*i;
+	 						boxes[nbBoxes].y= 100*j;
+	 						nbBoxes++;
 	 						 			break;
-	 						 case "1":	map[j][i]=new Character() ;
+	 						 			
+	 						 case "1":	if (nbChar==0){
+	 						nbChar++;
+	 						player=new Character();
+	 						player.x= 100*i;
+	 						player.y= 100*j;
+	 						}
+	 							map[j][i]=new Unmoveable(0);
+	 							map[j][i].x= 100*i;
+		 						map[j][i].y= 100*j;	 						
 	 									break;
-	 						 case "2":	map[j][i]=new Unmoveable(0) ;
+	 									
+	 						 case "2":	map[j][i]=new Unmoveable(0);
+	 						map[j][i].x= 100*i;
+	 						map[j][i].y= 100*j;
 	 									break;
-	 						 case "3":	map[j][i]=new  Unmoveable(1) ;
+	 						 case "3":	map[j][i]=new  Unmoveable(1);
+	 						map[j][i].x= 100*i;
+	 						map[j][i].y= 100*j;
 	 									break;
 	 						 case "4":	map[j][i]=new  Unmoveable(2);
+	 						 map[j][i].x= 100*i;
+	 						 map[j][i].y= 100*j;
 	 									break;
+	 									
 	 						 default: map[j][i]=new Skin();
+	 						map[j][i].x= 100*i;
+	 						map[j][i].y= 100*j;
 	 						 }
 	 					 
 	 						System.out.print(what[i]+" "+map[j][i].test+"  ");
@@ -78,8 +109,114 @@ public class Game {
 	 			}
 	 		}
 	 	}
+	 	
 
 	 	System.out.println("Done");
-	   
-	   }
+	 	
+	 	addKeyListener(this);
+	 	
+		this.setVisible(true);
+	}
+	
+	public void paint(Graphics g){
+		for(int i=0; i<maplength; i++){
+			for(int j=0; j<mapwidth; j++){
+				g.drawImage(map[i][j].image, map[i][j].x, map[i][j].y, this);
+				//System.out.println("position"+x+","+y);
+			}
+		}
+		for(int i=0; i<nbBoxes; i++){
+			g.drawImage(boxes[i].image, boxes[i].x, boxes[i].y, this);
+		}
+		g.drawImage(player.image, player.x, player.y, this);
+	}
+	
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getKeyCode()==KeyEvent.VK_LEFT){
+			toucheLeft=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_UP){
+			toucheUp=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_DOWN){
+			toucheDown=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_RIGHT){
+			toucheRight=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_ESCAPE){
+			System.exit(0);
+		}
+		gestionPlayer(ecran);
+		repaint();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getKeyCode()==KeyEvent.VK_LEFT){
+			toucheLeft=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_RIGHT){
+			toucheRight=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_UP){
+			toucheUp=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_DOWN){
+			toucheDown=false;
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+		System.out.println("you should move right now !");
+		gestionPlayer(ecran);
+		repaint();
+		
+	}
+	
+	public void gestionPlayer(Rectangle ecran){
+		Toolkit T = Toolkit.getDefaultToolkit();
+		
+		if(toucheUp){
+			if (player.y>0){
+				player.move("up");
+				player.image = T.getImage("ANGER_Fullbody_Render.png");
+			}
+		}
+		if(toucheDown){
+			if(player.y<ecran.getWidth()-100){
+			player.move("down");
+			player.image = T.getImage("DISGUST_Fullbody_Render.png");
+			}
+		}
+		if(toucheRight){
+			if(player.x<ecran.getHeight()-100){
+			player.move("right");
+			player.image = T.getImage("FEAR_Fullbody_Render.png");
+			}
+		}
+		if(toucheLeft){
+			if(player.x>0){
+			player.move("left");
+			player.image = T.getImage("JOY_Fullbody_Render.png");
+			
+			}
+		}
+	}
+	
+	public static void main(String[] args){
+		Game m = new Game();
+	 }
 }
