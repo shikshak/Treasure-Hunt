@@ -1,3 +1,4 @@
+
 /**<including all the background's characteristics: grass, wall, path
  *static within a level
  * */
@@ -14,13 +15,28 @@ import javax.swing.text.Position;
 
  class Skin {
 	 
-	 BufferedImage image;    
-	 Rectangle BoxObjet;
-	 String test="lol";
-	
+	 String test="lol"; 
+	 int x,y;
+	 float direction;                 
+	 Image image;           
+	 boolean actif;
+																					
 	 public Skin(){
-		 test="lala";
+		test="lala";
+		actif=false;
+	 }
+	 
+	 public void move (String dir){
+		 
+		 switch (dir){
+			 case "right": x+=100;
+			 break;
+			 case "left": x-=100;
+			 break;
+			 case "up": y-=100;
+			 break;
+			 case "down": y+=100;
+			 break;
+		 }
 	 }
 }
-
- 
