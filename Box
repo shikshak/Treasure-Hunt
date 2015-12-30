@@ -1,7 +1,13 @@
+import java.awt.*;
+
+
+
 public class Box extends Skin {
 
 	public Box() {
 		// TODO Auto-generated constructor stub
+		Toolkit T = Toolkit.getDefaultToolkit();
+		this.image = T.getImage("box_diagonal.png");
 		test="box**";
 	}
 
