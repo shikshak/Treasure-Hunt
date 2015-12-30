@@ -1,0 +1,155 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+
+
+public class MainGame extends JFrame {
+	/**Attributes: 
+	 * Skin = the type of each box
+	 * Screen = Rectangle
+	 * */
+	
+	static Skin[][] map;
+	static int maplength=6;
+ 	static int mapwidth=6;
+ 	Rectangle Screen;
+ 	Graphics buffer;
+ 	BufferedImage background;
+ 	
+	 
+	public MainGame(){
+		this.setLayout(null);
+		this.setResizable(false);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setBounds(50,50,600,625);
+		
+		map = new Skin[maplength][mapwidth];
+		Screen = new Rectangle(0,0,getSize().width,getSize().height);
+		
+		Toolkit T = Toolkit.getDefaultToolkit();
+		/**for(int i=0; i<maplength; i++){
+			for(int j=0; j<mapwidth; j++){
+				map[i][j] = new Skin();
+				map[i][j].image = T.getImage("grass_background.jpg"); 
+			}
+		}*/
+		
+		String csvFile = "map.csv";
+	 	BufferedReader br = null;
+	 	String line = "";
+	 	String cvsSplitBy = ";";
+	 	int j=0;
+		
+	 	try {
+	 		br = new BufferedReader(new FileReader(csvFile));
+	 				while ((line = br.readLine()) != null) {
+	 					String[] what = line.split(cvsSplitBy);
+	 					for(int i=0; i<mapwidth;i++){
+	 						 switch(what[i]){
+	 						 case "0":	map[j][i]=new Box() ;
+	 						 			break;
+	 						 case "1":	map[j][i]=new Character() ;
+	 									break;
+	 						 case "2":	map[j][i]=new Unmoveable(0) ;
+	 									break;
+	 						 case "3":	map[j][i]=new  Unmoveable(1) ;
+	 									break;
+	 						 case "4":	map[j][i]=new  Unmoveable(2);
+	 									break;
+	 						 default: map[j][i]=new Skin();
+	 						 }
+	 					 
+	 						System.out.print(what[i]+" "+map[j][i].test+"  ");
+	 					}
+	 					System.out.println();
+	 					j++;
+	 				}
+	 	} catch (FileNotFoundException e) {
+	 		e.printStackTrace();
+	 	} catch (IOException e) {
+	 		e.printStackTrace();
+	 	} finally {
+	 		if (br != null) {
+	 			try {
+	 				br.close();
+	 			} catch (IOException e) {
+	 				e.printStackTrace();
+	 			}
+	 		}
+	 	}
+
+	 	System.out.println("Done");
+		
+		
+		/**Get buffered image background*/
+		background = new BufferedImage(Screen.width, Screen.height, BufferedImage.TYPE_INT_RGB);
+		buffer = background.getGraphics();
+		
+		
+		
+		this.setVisible(true);
+	}
+	
+	public void paint(Graphics g){
+		int x=0; //position on the window
+		int y=0;
+		for(int i=0; i<mapwidth; i++){
+			for(int j=0; j<maplength; j++){
+				x= 100*i;
+				y= 25+100*j;
+				g.drawImage(map[i][j].image, x, y, this);
+				System.out.println("position"+x+","+y);
+			}
+		}
+		
+		String csvFile = "map2.csv";
+		BufferedReader br2 = null;
+	 	String line = "";
+	 	String cvsSplitBy = ";";
+	 	int j=0;
+		
+	 	try {
+	 		br2 = new BufferedReader(new FileReader(csvFile));
+	 				while ((line = br2.readLine()) != null) {
+	 					String[] what = line.split(cvsSplitBy);
+	 					for(int i=0; i<mapwidth;i++){
+	 						 switch(what[i]){
+	 						 case "0":	map[j][i]=new Box() ;
+	 						 			break;
+	 						 case "1":	map[j][i]=new Character() ;
+	 									break;
+	 						 case "2":	map[j][i]= new Skin() ;
+	 									break;
+	 						 default: map[j][i]=new Skin();
+	 						 }
+							g.drawImage(map[i][j].image, 100*i, 25+100*j, this);
+	 						System.out.print(what[i]+" "+map[j][i].test+"  ");
+	 					}
+	 					System.out.println();
+	 					j++;
+	 				}
+	 	} catch (FileNotFoundException e) {
+	 		e.printStackTrace();
+	 	} catch (IOException e) {
+	 		e.printStackTrace();
+	 	} finally {
+	 		if (br2 != null) {
+	 			try {
+	 				br2.close();
+	 			} catch (IOException e) {
+	 				e.printStackTrace();
+	 			}
+	 		}
+	 	}
+
+	 	System.out.println("Done");
+	}
+	
+	 
+	public static void main(String[] args){
+		MainGame m = new MainGame();
+	 }
+}
