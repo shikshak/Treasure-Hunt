@@ -1,9 +1,11 @@
-public class Character extends Skin{
+import java.awt.*;
 
+public class Character extends Skin{
+	
 	public Character() {
-		// TODO Auto-generated constructor stub
-		/*image=***********/
+		
+		Toolkit T = Toolkit.getDefaultToolkit();
+		image = T.getImage("DISGUST_Fullbody_Render.png");
 		test="charc";
 	}
-
 }
