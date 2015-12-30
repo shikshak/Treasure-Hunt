@@ -1,3 +1,10 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+
 
 public class Unmoveable extends Skin {
 
@@ -6,12 +13,19 @@ public class Unmoveable extends Skin {
 		// TODO Auto-generated constructor stub
 	}
 	public Unmoveable (int i){
+		Toolkit T = Toolkit.getDefaultToolkit();
 		switch(i){
-		case 0: /*image=***********/ test="grass";
+		case 0:
+			test="grass";
+			image = T.getImage("grass_background.jpg");
 			break;
-		case 1: /*image=***********/ test="wall*";
+		case 1:
+			test="wall*";
+			image = T.getImage("wall_gray.jpg");
 			break;
-		case 2: /*image=***********/ test="path*";
+		case 2:
+			test="path*";
+			image = T.getImage("wall_light_gray.jpg");
 			break;
 		}
 	}
