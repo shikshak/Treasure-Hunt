@@ -1,0 +1,683 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+import java.io.*;
+import java.net.URL;
+
+import javax.sound.sampled.*;
+import javax.swing.*;
+
+public class Game extends JFrame implements ActionListener, KeyListener {
+
+	static Skin[][] map;
+	static int maplength=6;
+	static int mapwidth=6;
+
+	Skin player, box;
+
+	Rectangle Screen;
+	Graphics buffer;
+	BufferedImage background;
+
+	int nbChar=0;
+	boolean bug=false;
+	boolean didWin, didEnd, movePlayer, moveBox;
+
+
+	boolean toucheLeft;
+	boolean toucheRight;
+	boolean toucheEspace;
+	boolean toucheDown;
+	boolean toucheUp;
+
+	int level;
+
+	//Timer:
+	int Timer_ms = 50;
+	Timer Mytimer;
+	boolean movingUp, movingDown, movingLeft, movingRight;
+
+	int sx,sy,dx,dy;
+	int bsx,bsy,bdx,bdy;
+	int bi,bj;
+	int counter=0;
+	int bcounter=0;
+
+	JButton restartBt, comebackMenuBt;
+	JLabel levelLb,usernameLb, cheerLb;
+	JPanel statPanel;
+
+
+
+	public Game(){
+		this.setLayout(null);
+		this.setResizable(false);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setBounds(50,50,600,725);
+
+		this.getContentPane().setBackground(Color.blue);
+
+		Screen = new Rectangle(0,0,getSize().width,getSize().height);
+		map = new Skin[maplength][mapwidth];
+
+		box = new Box();
+
+
+		didWin=false;
+		didEnd=false;
+		level=1;
+
+		//Toolkit T = Toolkit.getDefaultToolkit();
+
+		readCsv();
+
+		/**Get buffered image background*/
+		background = new BufferedImage(Screen.width, Screen.height, BufferedImage.TYPE_INT_RGB);
+		buffer = background.getGraphics();
+
+		//	System.out.println("Done");
+
+		/*try {
+	         // Open an audio input stream.
+	         URL url = this.getClass().getClassLoader().getResource("mus_vsasgore.wav");
+	         AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
+	         // Get a sound clip resource.
+	         Clip clip = AudioSystem.getClip();
+	         // Open audio clip and load samples from the audio input stream.
+	         clip.open(audioIn);
+	         clip.start();
+	      } catch (UnsupportedAudioFileException e) {
+	         e.printStackTrace();
+	      } catch (IOException e) {
+	         e.printStackTrace();
+	      } catch (LineUnavailableException e) {
+	         e.printStackTrace();
+	      }*/
+
+		/*try {
+		        Clip clip = AudioSystem.getClip();
+		        AudioInputStream inputStream = AudioSystem.getAudioInputStream(
+		        		Game.class.getResourceAsStream("/mus_vsasgore.wav"));
+		        clip.open(inputStream);
+		        clip.start(); 
+		      } catch (Exception e) {
+		        System.err.println(e.getMessage());
+		      }*/
+
+		/*levelLb = new JLabel("You are in room "+level+". Still "+(5-level)+" to get to your treasure !");
+		levelLb.setBounds(10,10,350,20);
+		usernameLb = new JLabel("Insert name here");
+		usernameLb.setBounds(0,0,600,20);
+		cheerLb = new JLabel("It's only the beginning");
+		cheerLb.setBounds(0,0,600,20);
+
+		statPanel = new JPanel();
+		statPanel.setLayout(null);
+		statPanel.add(levelLb);
+		statPanel.add(usernameLb);
+		statPanel.add(cheerLb);
+		statPanel.setBounds(25,400,350,40);
+		statPanel.setBackground(Color.orange);
+
+		this.setContentPane(statPanel);
+*/
+		
+		comebackMenuBt = new JButton(" ");
+       ImageIcon iconReturn = new ImageIcon("images/Return.png");
+       comebackMenuBt.setIcon(iconReturn);
+       comebackMenuBt.setBounds(new Rectangle(10, 0, 100, 30));
+       comebackMenuBt.addActionListener(this);
+
+		Mytimer = new Timer(Timer_ms, this);
+		Mytimer.start();
+
+		addKeyListener(this);
+
+		setTitle("Treasure Hunting go go~~");
+
+		this.setVisible(true);
+	}
+
+	public void readCsv (){
+		String csvFile="level"+level+".csv";
+		BufferedReader br = null;
+		String line = "";
+		String cvsSplitBy = ";";
+		int j=0;
+
+		try {
+			br = new BufferedReader(new FileReader(csvFile));
+			while ((line = br.readLine()) != null) {
+				String[] what = line.split(cvsSplitBy);
+				for(int i=0; i<mapwidth;i++){
+					switch(what[i]){
+					case "0":	map[j][i]=new Box();
+					map[j][i].x= 100*i;
+					map[j][i].y= 100*j;
+					break;
+
+					case "1":	if (nbChar==0){
+						nbChar++;
+						player=new Character();
+						player.x= 100*i;
+						player.y= 100*j;
+					}
+					map[j][i]=new Skin();
+					map[j][i].x= 100*i;
+					map[j][i].y= 100*j;	 						
+					break;
+
+					case "3":	map[j][i]=new  Unmoveable(1);
+					map[j][i].x= 100*i;
+					map[j][i].y= 100*j;
+					break;
+					case "4":	map[j][i]=new  Unmoveable(2);
+					map[j][i].x= 100*i;
+					map[j][i].y= 100*j;
+					break;
+
+					default: map[j][i]=new Skin();
+					map[j][i].x= 100*i;
+					map[j][i].y= 100*j;
+					}
+				}
+				j++;
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
+
+	public void paint(Graphics g){
+		
+	//	super.paint(g);
+
+		Toolkit T = Toolkit.getDefaultToolkit();
+		
+		buffer.setColor(Color.cyan);
+		buffer.fillRect(0, 0, 600, 725);
+
+		if(!bug && !didWin){
+			for(int i=0; i<maplength; i++){
+				for(int j=0; j<mapwidth; j++){
+
+					if(bcounter == 10 && moveBox){
+						map[bi][bj] = new Box();
+						map[bi][bj].x = bj*100;
+						map[bi][bj].y = bi*100;
+					}
+					
+					buffer.drawImage(map[i][j].image, map[i][j].x, map[i][j].y, this);
+
+					if(level==1 && ((i==1&&j==2)||(i==3&&j==1))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==2 && ((i==2&&j==4)||(i==2&&j==3)||(i==3&&j==3))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==3 && ((i==2&&j==4)||(i==4&&j==2)||(i==4&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==4 && ((i==4&&j==2)||(i==4&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==5 && ((i==3&&j==4)||(i==2&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+				}
+			}
+
+			if(movePlayer){
+				++counter;
+				if(counter==1){
+					dy=sy;
+					dx=sx;
+					if(movingUp){
+						dy=dy-10;
+						player.image = T.getImage("Pink_walk_back.gif");
+					}else if(movingDown){
+						dy = dy+10;
+						player.image = T.getImage("Pink_walk_front.gif");
+					}else if(movingLeft){
+						dx = dx-10;
+						player.image = T.getImage("Pink_walk_left.gif");
+					}else if(movingRight){
+						dx = dx+10;
+						player.image = T.getImage("Pink_walk_right.gif");
+					}
+					player.x = dx;
+					player.y = dy;
+				}else if(counter<=10){
+					if(movingUp){
+						dy=dy-10;
+					}else if(movingDown){
+						dy = dy+10;
+					}else if(movingLeft){
+						dx = dx-10;
+					}else if(movingRight){
+						dx = dx+10;
+					}
+
+					player.x = dx;
+					player.y = dy;
+					
+				}
+				
+				
+			}
+			buffer.drawImage(player.image, player.x, player.y,100,100, this);
+			
+			if(moveBox){
+				++bcounter;
+				if(bcounter==1){
+					bdy=bsy;
+					bdx=bsx;
+					if(movingUp){
+						bdy=bdy-10;
+					}else if(movingDown){
+						bdy = bdy+10;
+					}else if(movingLeft){
+						bdx = bdx-10;
+					}else if(movingRight){
+						bdx = bdx+10;
+					}
+					box.x = bdx;
+					box.y = bdy;
+				}else if(bcounter<=10){
+					if(movingUp){
+						bdy=bdy-10;
+						
+					}else if(movingDown){
+						bdy = bdy+10;
+						
+					}else if(movingLeft){
+						bdx = bdx-10;
+						
+					}else if(movingRight){
+						bdx = bdx+10;
+						
+					}
+					box.x = bdx;
+					box.y = bdy;
+					
+				}
+				
+				buffer.drawImage(box.image,box.x,box.y,this);
+			}
+			
+			if(counter ==11 || bcounter ==15){
+					movingUp = false;
+					movingDown = false;
+					movingLeft = false;
+					movingRight = false;
+					movePlayer = false;
+					moveBox = false;
+					counter = 0;
+					bcounter =0;
+					player.image = T.getImage("Avatar4.png");
+					
+					
+
+				}
+
+			
+			
+		}
+
+		if(bug) {
+			Image image = T.getImage("bonus.jpg");
+			buffer.drawImage(image,0,0,Screen.height,Screen.width,this);
+		}
+		if(didEnd){
+			Image image = T.getImage("win.jpg");
+			buffer.drawImage(image,0,0,600,300,this);
+			image = T.getImage("win2.gif");
+			buffer.drawImage(image,0,300,300,300,this);
+			image = T.getImage("win.gif");
+			buffer.drawImage(image,300,300,300,300,this);
+
+		}	
+		else if(didWin){
+			for(int i=0; i<maplength; i++){
+				for(int j=0; j<mapwidth; j++){
+					
+					buffer.drawImage(map[i][j].image, map[i][j].x, map[i][j].y, this);
+					
+					if(level==1 && ((i==1&&j==2)||(i==3&&j==1))){
+						
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==2 && ((i==2&&j==4)||(i==2&&j==3)||(i==3&&j==3))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==3 && ((i==2&&j==4)||(i==4&&j==2)||(i==4&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==4 && ((i==4&&j==2)||(i==4&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+					else if(level==5 && ((i==3&&j==4)||(i==2&&j==4))){
+						Image treasure= T.getImage("star.gif");
+						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+					}
+				}
+			}
+			
+			Image image = T.getImage("door.gif");
+			buffer.drawImage(image,300,300,100,100,this);
+
+			if(movePlayer){
+				++counter;
+				if(counter==1){
+					dy=sy;
+					dx=sx;
+					if(movingUp){
+						dy=dy-10;
+						player.image = T.getImage("Pink_walk_back.gif");
+					}else if(movingDown){
+						dy = dy+10;
+						player.image = T.getImage("Pink_walk_front.gif");
+					}else if(movingLeft){
+						dx = dx-10;
+						player.image = T.getImage("Pink_walk_left.gif");
+					}else if(movingRight){
+						dx = dx+10;
+						player.image = T.getImage("Pink_walk_right.gif");
+					}
+					player.x = dx;
+					player.y = dy;
+				}else if(counter<=10){
+					if(movingUp){
+						dy=dy-10;
+					}else if(movingDown){
+						dy = dy+10;
+					}else if(movingLeft){
+						dx = dx-10;
+					}else if(movingRight){
+						dx = dx+10;
+					}
+
+					player.x = dx;
+					player.y = dy;
+					
+				}
+				
+				if(counter ==11 || bcounter ==15){
+					movingUp = false;
+					movingDown = false;
+					movingLeft = false;
+					movingRight = false;
+					movePlayer = false;
+					moveBox = false;
+					counter = 0;
+					bcounter =0;
+					player.image = T.getImage("Avatar4.png");
+					
+					
+
+				}
+								
+			}
+			buffer.drawImage(player.image, player.x, player.y,100,100, this);
+			
+			
+			
+		}
+		
+		buffer.setColor(Color.black);
+        buffer.setFont(new Font("Sawasdee",Font.LAYOUT_LEFT_TO_RIGHT,10));
+        buffer.drawString("You are in room "+level+". Still "+(5-level)+" to get to your treasure !", 10, 630);
+        buffer.drawString("It's only the beginning !", 300, 630);
+        
+    //    comebackMenuBt.repaint();
+
+		g.drawImage(background,0,25,this);
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+			if(e.getKeyCode()==KeyEvent.VK_LEFT){
+
+				toucheLeft=true;
+
+			}
+			else if(e.getKeyCode()==KeyEvent.VK_UP){
+				toucheUp=true;
+
+			}
+			else if(e.getKeyCode()==KeyEvent.VK_DOWN){
+
+				toucheDown=true;
+
+			}
+		
+		
+		if(e.getKeyCode()==KeyEvent.VK_RIGHT){
+
+			toucheRight=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_ESCAPE){
+			System.exit(0);
+		}
+		if(e.getKeyCode()==KeyEvent.VK_SPACE){
+			restartLevel();
+		}
+		if(e.getKeyCode()==KeyEvent.VK_R&&level!=1){
+			level-=2;;
+			gotonextlevel();
+		}
+		if(e.getKeyCode()==KeyEvent.VK_W){
+			if(level!=5) gotonextlevel();
+			if (level==5) didEnd=true;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_M){
+			if(level!=5) didWin=true;
+			if(level==5) didEnd=true;
+		}
+		//simulate();
+		//repaint();
+	}
+
+	public void restartLevel(){
+		nbChar=0;
+		readCsv();
+	}
+
+	public void simulate (){
+		gestionPlayer(Screen);
+
+		if(level==1 && map[1][2].isObstacle && map[3][1].isObstacle) {
+			didWin=true;
+		}
+		else if(level==2 && map[2][4].isObstacle && map[2][3].isObstacle && map[3][3].isObstacle){
+			didWin=true;
+		}
+		else if(level==3 && map[2][4].isObstacle && map[4][2].isObstacle && map[4][4].isObstacle){
+			didWin=true;
+		}
+		else if(level==4 && map[4][2].isObstacle && map[4][4].isObstacle){
+			didWin=true;
+		}
+		else if(level==5 && map[3][4].isObstacle && map[2][4].isObstacle){
+			didWin=true;
+		}
+		if(didWin&&player.x==300&&player.y==300) {
+			gotonextlevel();
+		}
+	}
+
+	public void gotonextlevel(){
+		
+		repaint();
+		level++;
+		nbChar=0;
+		didWin=false;
+		readCsv();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getKeyCode()==KeyEvent.VK_LEFT){
+			toucheLeft=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_RIGHT){
+			toucheRight=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_UP){
+			toucheUp=false;
+		}
+		if(e.getKeyCode()==KeyEvent.VK_DOWN){
+			toucheDown=false;
+		}
+
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		simulate();
+		repaint();
+	}
+
+	public void gestionPlayer(Rectangle Screen){
+		Toolkit T = Toolkit.getDefaultToolkit();
+
+		int i= player.y/100;
+		int j=player.x/100;
+		
+		if(map[i][j].isObstacle) bug=true;
+		
+		if(counter == 0){
+		if(toucheUp || movingUp){
+
+			//if(!(i==1 && (map[i-1][j].hasBox))){
+			if((i!=0 && !(map[i-1][j].isObstacle))|| didWin){
+				this.movingUp = true;
+				movePlayer = true;
+				sx = player.x;
+				sy = player.y;
+				
+				}
+			
+				if((i%6!=1 && i%6!=0 && map[i-1][j] instanceof Box)&&(!(map[i-2][j].isObstacle))) {
+
+					movingUp = true;
+					moveBox = true;
+					bsx = map[i-1][j].x;
+					bsy = map[i-1][j].y;
+					bi = i-2;
+					bj = j;
+					
+					
+
+					map[i-1][j] = new Skin();
+					map[i-1][j].x = (j)*100;
+					map[i-1][j].y = (i-1)*100;
+
+				}
+				
+				
+				
+	
+			
+		}else if(toucheDown || movingDown){
+			if((i!=5 && !(map[i+1][j].isObstacle)) || didWin){
+				this.movingDown = true;
+				movePlayer = true;
+				sx = player.x;
+				sy = player.y;
+			}
+			if((i%6!=4 && i%6!=5 && map[i+1][j] instanceof Box)&&(!(map[i+2][j].isObstacle))) {
+
+					movingDown = true;
+					moveBox = true;
+					bsx = map[i+1][j].x;
+					bsy = map[i+1][j].y;
+					bi = i+2;
+					bj = j;
+					
+					
+
+					map[i+1][j] = new Skin();
+					map[i+1][j].x = (j)*100;
+					map[i+1][j].y = (i+1)*100;
+
+				}
+		}else if(toucheLeft || movingLeft){
+			if((j!=0 && !(map[i][j-1].isObstacle)) || didWin){
+				this.movingLeft = true;
+				movePlayer = true;
+				sx = player.x;
+				sy = player.y;
+			}
+			if(j%6!=0 && j%6!=1 && map[i][j-1] instanceof Box && (!(map[i][j-2].isObstacle))) {
+
+					movingLeft = true;
+					moveBox = true;
+					bsx = map[i][j-1].x;
+					bsy = map[i][j-1].y;
+					bi = i;
+					bj = j-2;
+					
+					
+
+					map[i][j-1] = new Skin();
+					map[i][j-1].x = (j-1)*100;
+					map[i][j-1].y = (i)*100;
+
+				}
+		}else if(toucheRight || movingRight){
+			if((j!=5 && !(map[i][j+1].isObstacle)) || didWin){
+				movingRight = true;
+				movePlayer = true;
+				sx = player.x;
+				sy = player.y;
+			}
+			if((j%6!=4 && j%6!=5 && map[i][j+1] instanceof Box) && (!(map[i][j+2].isObstacle))) {
+
+					movingRight = true;
+					moveBox = true;
+					bsx = map[i][j+1].x;
+					bsy = map[i][j+1].y;
+					bi = i;
+					bj = j+2;
+					
+					
+
+					map[i][j+1] = new Skin();
+					map[i][j+1].x = (j+1)*100;
+					map[i][j+1].y = (i)*100;
+
+				}
+		}	
+	}
+}
+
+}
+
