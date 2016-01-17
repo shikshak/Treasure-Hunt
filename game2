@@ -9,6 +9,7 @@ import javax.swing.*;
 
 public class Game extends JFrame implements ActionListener, KeyListener {
 
+	//The map of the level
 	static Skin[][] map;
 	static int maplength=6;
 	static int mapwidth=6;
@@ -20,9 +21,8 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 	BufferedImage background;
 
 	int nbChar=0;
-	boolean bug=false;
 	boolean didWin, didEnd, movePlayer, moveBox;
-
+	int ctEnd;
 
 	boolean toucheLeft;
 	boolean toucheRight;
@@ -43,108 +43,54 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 	int counter=0;
 	int bcounter=0;
 
-	JButton restartBt, comebackMenuBt;
-	JLabel levelLb,usernameLb, cheerLb;
-	JPanel statPanel;
-
-
 
 	public Game(){
+		//Windows settings
 		this.setLayout(null);
 		this.setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setBounds(50,50,600,725);
-
+		this.setBounds(20,20,600,725);
+		setTitle("Treasure Hunting go go~~");
 		this.getContentPane().setBackground(Color.blue);
 
 		Screen = new Rectangle(0,0,getSize().width,getSize().height);
-		map = new Skin[maplength][mapwidth];
 
+		//Moving box init
 		box = new Box();
 
-
+		//Start of the game init
 		didWin=false;
 		didEnd=false;
 		level=1;
 
-		//Toolkit T = Toolkit.getDefaultToolkit();
-
+		//map filling
+		map = new Skin[maplength][mapwidth];
 		readCsv();
 
 		/**Get buffered image background*/
 		background = new BufferedImage(Screen.width, Screen.height, BufferedImage.TYPE_INT_RGB);
 		buffer = background.getGraphics();
 
-		//	System.out.println("Done");
-
-		/*try {
-	         // Open an audio input stream.
-	         URL url = this.getClass().getClassLoader().getResource("mus_vsasgore.wav");
-	         AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
-	         // Get a sound clip resource.
-	         Clip clip = AudioSystem.getClip();
-	         // Open audio clip and load samples from the audio input stream.
-	         clip.open(audioIn);
-	         clip.start();
-	      } catch (UnsupportedAudioFileException e) {
-	         e.printStackTrace();
-	      } catch (IOException e) {
-	         e.printStackTrace();
-	      } catch (LineUnavailableException e) {
-	         e.printStackTrace();
-	      }*/
-
-		/*try {
-		        Clip clip = AudioSystem.getClip();
-		        AudioInputStream inputStream = AudioSystem.getAudioInputStream(
-		        		Game.class.getResourceAsStream("/mus_vsasgore.wav"));
-		        clip.open(inputStream);
-		        clip.start(); 
-		      } catch (Exception e) {
-		        System.err.println(e.getMessage());
-		      }*/
-
-		/*levelLb = new JLabel("You are in room "+level+". Still "+(5-level)+" to get to your treasure !");
-		levelLb.setBounds(10,10,350,20);
-		usernameLb = new JLabel("Insert name here");
-		usernameLb.setBounds(0,0,600,20);
-		cheerLb = new JLabel("It's only the beginning");
-		cheerLb.setBounds(0,0,600,20);
-
-		statPanel = new JPanel();
-		statPanel.setLayout(null);
-		statPanel.add(levelLb);
-		statPanel.add(usernameLb);
-		statPanel.add(cheerLb);
-		statPanel.setBounds(25,400,350,40);
-		statPanel.setBackground(Color.orange);
-
-		this.setContentPane(statPanel);
-*/
-		
-		comebackMenuBt = new JButton(" ");
-       ImageIcon iconReturn = new ImageIcon("images/Return.png");
-       comebackMenuBt.setIcon(iconReturn);
-       comebackMenuBt.setBounds(new Rectangle(10, 0, 100, 30));
-       comebackMenuBt.addActionListener(this);
-
+		//Timer start
 		Mytimer = new Timer(Timer_ms, this);
 		Mytimer.start();
 
+		//Key Listener 
 		addKeyListener(this);
 
-		setTitle("Treasure Hunting go go~~");
-
+		//showing the window
 		this.setVisible(true);
 	}
 
 	public void readCsv (){
-		String csvFile="level"+level+".csv";
+		//the csv file, initiation of the csv reader
+		String csvFile="levels/level"+level+".csv";
 		BufferedReader br = null;
 		String line = "";
 		String cvsSplitBy = ";";
 		int j=0;
 
+		//read the csv files and fill the array map[][], create the player
 		try {
 			br = new BufferedReader(new FileReader(csvFile));
 			while ((line = br.readLine()) != null) {
@@ -200,15 +146,17 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 	}
 
 	public void paint(Graphics g){
-		
-	//	super.paint(g);
+
 
 		Toolkit T = Toolkit.getDefaultToolkit();
-		
+
+		//draw the background of the window
 		buffer.setColor(Color.cyan);
 		buffer.fillRect(0, 0, 600, 725);
 
-		if(!bug && !didWin){
+		//if the player didn't win
+		if(!didWin){
+			//draw the map, grass and boxes
 			for(int i=0; i<maplength; i++){
 				for(int j=0; j<mapwidth; j++){
 
@@ -217,32 +165,34 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 						map[bi][bj].x = bj*100;
 						map[bi][bj].y = bi*100;
 					}
-					
+
 					buffer.drawImage(map[i][j].image, map[i][j].x, map[i][j].y, this);
 
+					//draw stars where the player should put the boxes
 					if(level==1 && ((i==1&&j==2)||(i==3&&j==1))){
-						Image treasure= T.getImage("star.gif");
+						Image treasure= T.getImage("pictures/star.gif");
 						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
 					}
 					else if(level==2 && ((i==2&&j==4)||(i==2&&j==3)||(i==3&&j==3))){
-						Image treasure= T.getImage("star.gif");
+						Image treasure= T.getImage("pictures/star.gif");
 						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
 					}
 					else if(level==3 && ((i==2&&j==4)||(i==4&&j==2)||(i==4&&j==4))){
-						Image treasure= T.getImage("star.gif");
+						Image treasure= T.getImage("pictures/star.gif");
 						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
 					}
 					else if(level==4 && ((i==4&&j==2)||(i==4&&j==4))){
-						Image treasure= T.getImage("star.gif");
+						Image treasure= T.getImage("pictures/star.gif");
 						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
 					}
 					else if(level==5 && ((i==3&&j==4)||(i==2&&j==4))){
-						Image treasure= T.getImage("star.gif");
+						Image treasure= T.getImage("pictures/star.gif");
 						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
 					}
 				}
 			}
 
+			//draw the player
 			if(movePlayer){
 				++counter;
 				if(counter==1){
@@ -250,16 +200,16 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					dx=sx;
 					if(movingUp){
 						dy=dy-10;
-						player.image = T.getImage("Pink_walk_back.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_back.gif");
 					}else if(movingDown){
 						dy = dy+10;
-						player.image = T.getImage("Pink_walk_front.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_front.gif");
 					}else if(movingLeft){
 						dx = dx-10;
-						player.image = T.getImage("Pink_walk_left.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_left.gif");
 					}else if(movingRight){
 						dx = dx+10;
-						player.image = T.getImage("Pink_walk_right.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_right.gif");
 					}
 					player.x = dx;
 					player.y = dy;
@@ -276,13 +226,12 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
 					player.x = dx;
 					player.y = dy;
-					
+
 				}
-				
-				
 			}
 			buffer.drawImage(player.image, player.x, player.y,100,100, this);
-			
+
+			//draw the moving box if it is moving
 			if(moveBox){
 				++bcounter;
 				if(bcounter==1){
@@ -302,90 +251,88 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 				}else if(bcounter<=10){
 					if(movingUp){
 						bdy=bdy-10;
-						
+
 					}else if(movingDown){
 						bdy = bdy+10;
-						
+
 					}else if(movingLeft){
 						bdx = bdx-10;
-						
+
 					}else if(movingRight){
 						bdx = bdx+10;
-						
+
 					}
 					box.x = bdx;
 					box.y = bdy;
-					
+
 				}
-				
+
 				buffer.drawImage(box.image,box.x,box.y,this);
 			}
-			
+
+			//stop the animation
 			if(counter ==11 || bcounter ==15){
-					movingUp = false;
-					movingDown = false;
-					movingLeft = false;
-					movingRight = false;
-					movePlayer = false;
-					moveBox = false;
-					counter = 0;
-					bcounter =0;
-					player.image = T.getImage("Avatar4.png");
-					
-					
+				movingUp = false;
+				movingDown = false;
+				movingLeft = false;
+				movingRight = false;
+				movePlayer = false;
+				moveBox = false;
+				counter = 0;
+				bcounter =0;
 
-				}
-
-			
-			
+				player.image = T.getImage("pictures/Avatar"+Character.CharNb+".png");
+			}
 		}
 
-		if(bug) {
-			Image image = T.getImage("bonus.jpg");
-			buffer.drawImage(image,0,0,Screen.height,Screen.width,this);
-		}
+		//if end of the game, give the player his treasure
 		if(didEnd){
-			Image image = T.getImage("win.jpg");
+			Image image = T.getImage("pictures/win.jpg");
 			buffer.drawImage(image,0,0,600,300,this);
-			image = T.getImage("win2.gif");
+			image = T.getImage("pictures/win2.png");
 			buffer.drawImage(image,0,300,300,300,this);
-			image = T.getImage("win.gif");
+			image = T.getImage("pictures/win3.jpg");
 			buffer.drawImage(image,300,300,300,300,this);
 
 		}	
+
+		//if end of the level, take away the boxes and open the door for the player
 		else if(didWin){
 			for(int i=0; i<maplength; i++){
 				for(int j=0; j<mapwidth; j++){
-					
+
 					buffer.drawImage(map[i][j].image, map[i][j].x, map[i][j].y, this);
-					
+
+					//eliminatioon of the boxes
 					if(level==1 && ((i==1&&j==2)||(i==3&&j==1))){
-						
-						Image treasure= T.getImage("star.gif");
-						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+						Image treasure= T.getImage("pictures/hole.gif");
+						buffer.drawImage(treasure, map[i][j].x, map[i][j].y,100,100, this);
 					}
 					else if(level==2 && ((i==2&&j==4)||(i==2&&j==3)||(i==3&&j==3))){
-						Image treasure= T.getImage("star.gif");
-						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+						Image treasure= T.getImage("pictures/hole.gif");
+						buffer.drawImage(treasure, map[i][j].x, map[i][j].y,100,100, this);
 					}
 					else if(level==3 && ((i==2&&j==4)||(i==4&&j==2)||(i==4&&j==4))){
-						Image treasure= T.getImage("star.gif");
-						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+						Image treasure= T.getImage("pictures/hole.gif");
+						buffer.drawImage(treasure,map[i][j].x, map[i][j].y,100,100, this);
 					}
 					else if(level==4 && ((i==4&&j==2)||(i==4&&j==4))){
-						Image treasure= T.getImage("star.gif");
-						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+						Image treasure= T.getImage("pictures/hole.gif");
+						buffer.drawImage(treasure, map[i][j].x, map[i][j].y,100,100, this);
 					}
 					else if(level==5 && ((i==3&&j==4)||(i==2&&j==4))){
-						Image treasure= T.getImage("star.gif");
-						buffer.drawImage(treasure, map[i][j].x+(map[i][j].image.getWidth(this))/2-(treasure.getWidth(this))/2, map[i][j].y+(map[i][j].image.getHeight(this))/2-(treasure.getHeight(this))/2, this);
+						Image treasure= T.getImage("pictures/hole.gif");
+						buffer.drawImage(treasure, map[i][j].x, map[i][j].y,100,100, this);
 					}
 				}
 			}
-			
-			Image image = T.getImage("door.gif");
+
+			//opening door
+			Image image = T.getImage("pictures/door.gif");
+			if(level==5) image=T.getImage("pictures/TreasureChest.jpg");
 			buffer.drawImage(image,300,300,100,100,this);
 
+			//player drawing
 			if(movePlayer){
 				++counter;
 				if(counter==1){
@@ -393,16 +340,16 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					dx=sx;
 					if(movingUp){
 						dy=dy-10;
-						player.image = T.getImage("Pink_walk_back.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_back.gif");
 					}else if(movingDown){
 						dy = dy+10;
-						player.image = T.getImage("Pink_walk_front.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_front.gif");
 					}else if(movingLeft){
 						dx = dx-10;
-						player.image = T.getImage("Pink_walk_left.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_left.gif");
 					}else if(movingRight){
 						dx = dx+10;
-						player.image = T.getImage("Pink_walk_right.gif");
+						player.image = T.getImage("pictures/Avatar"+Character.CharNb+"_right.gif");
 					}
 					player.x = dx;
 					player.y = dy;
@@ -419,9 +366,10 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
 					player.x = dx;
 					player.y = dy;
-					
+
 				}
-				
+
+				//end of animation
 				if(counter ==11 || bcounter ==15){
 					movingUp = false;
 					movingDown = false;
@@ -431,72 +379,80 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					moveBox = false;
 					counter = 0;
 					bcounter =0;
-					player.image = T.getImage("Avatar4.png");
-					
-					
-
+					player.image = T.getImage("pictures/Avatar"+Character.CharNb+".png");
 				}
-								
 			}
 			buffer.drawImage(player.image, player.x, player.y,100,100, this);
-			
-			
-			
 		}
-		
-		buffer.setColor(Color.black);
-        buffer.setFont(new Font("Sawasdee",Font.LAYOUT_LEFT_TO_RIGHT,10));
-        buffer.drawString("You are in room "+level+". Still "+(5-level)+" to get to your treasure !", 10, 630);
-        buffer.drawString("It's only the beginning !", 300, 630);
-        
-    //    comebackMenuBt.repaint();
 
+		//draw the bottom of the window, give some interresting key, current state of the game and cheering for the player !
+		buffer.setColor(Color.black);
+		buffer.setFont(new Font("Sawasdee",Font.LAYOUT_LEFT_TO_RIGHT,20));
+		if(!didEnd) buffer.drawString(Character.username+" in room "+level+". Still "+(5-level)+" to get to your treasure !", 10, 630);
+		buffer.drawString("Space to restart  -  Esc to exit  -   H to go back to menu",60,660);
+		if (level==1) buffer.drawString("It's only the beginning !", 300, 690);
+		if (level==2) buffer.drawString("One step closer !", 300, 690);
+		if (level==3) buffer.drawString("Half way !", 300, 690);
+		if (level==4) buffer.drawString("It's time to give up, your journey was great !", 100, 690);
+		if (level==5&&!didEnd) buffer.drawString("Wow you're still here ? It good to have determination !", 100, 690);
+		buffer.setFont(new Font("Sawasdee",Font.LAYOUT_LEFT_TO_RIGHT,10));
+		buffer.drawString("If bug press space", 10, 690);
+		buffer.setColor(Color.red);
+		buffer.setFont(new Font("Sawasdee",Font.LAYOUT_LEFT_TO_RIGHT,40));
+		if(didEnd) { buffer.drawString("Congratulations "+Character.username+" !!!",10,640);
+		buffer.drawImage(player.image, 300,670,20,20, this);}
+
+
+		//draw everything
 		g.drawImage(background,0,25,this);
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
-			if(e.getKeyCode()==KeyEvent.VK_LEFT){
 
-				toucheLeft=true;
-
-			}
-			else if(e.getKeyCode()==KeyEvent.VK_UP){
-				toucheUp=true;
-
-			}
-			else if(e.getKeyCode()==KeyEvent.VK_DOWN){
-
-				toucheDown=true;
-
-			}
-		
-		
-		if(e.getKeyCode()==KeyEvent.VK_RIGHT){
-
+		//when the player press a direction, its boolean became true
+		if(e.getKeyCode()==KeyEvent.VK_LEFT){
+			toucheLeft=true;
+		}
+		else if(e.getKeyCode()==KeyEvent.VK_UP){
+			toucheUp=true;
+		}
+		else if(e.getKeyCode()==KeyEvent.VK_DOWN){
+			toucheDown=true;
+		}
+		else if(e.getKeyCode()==KeyEvent.VK_RIGHT){
 			toucheRight=true;
 		}
+
+		//run away from the game
 		if(e.getKeyCode()==KeyEvent.VK_ESCAPE){
 			System.exit(0);
 		}
+
+		//restart the level where you're struck (of a big use if the player has weird coordinates, just restart and magic it's ok !)
 		if(e.getKeyCode()==KeyEvent.VK_SPACE){
 			restartLevel();
 		}
+
+		//go back to menu, maybe have a look at the instructions, change player..
+		if(e.getKeyCode()==KeyEvent.VK_H){
+			Menu goba=new Menu();
+			goba.setVisible(true);
+			this.setVisible(false);
+		}
+
+		//cheat keys, use with moderations
 		if(e.getKeyCode()==KeyEvent.VK_R&&level!=1){
 			level-=2;;
 			gotonextlevel();
 		}
 		if(e.getKeyCode()==KeyEvent.VK_W){
-			if(level!=5) gotonextlevel();
-			if (level==5) didEnd=true;
+			gotonextlevel();
 		}
 		if(e.getKeyCode()==KeyEvent.VK_M){
-			if(level!=5) didWin=true;
-			if(level==5) didEnd=true;
+			if (level==5) didEnd=true;
+			else didWin=true;
 		}
-		//simulate();
-		//repaint();
 	}
 
 	public void restartLevel(){
@@ -505,8 +461,10 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 	}
 
 	public void simulate (){
+
 		gestionPlayer(Screen);
 
+		//check if the player have won -> if the boxes are well organized
 		if(level==1 && map[1][2].isObstacle && map[3][1].isObstacle) {
 			didWin=true;
 		}
@@ -522,23 +480,27 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 		else if(level==5 && map[3][4].isObstacle && map[2][4].isObstacle){
 			didWin=true;
 		}
+
+		//change level if the player entered the door
 		if(didWin&&player.x==300&&player.y==300) {
 			gotonextlevel();
 		}
 	}
 
 	public void gotonextlevel(){
-		
-		repaint();
-		level++;
-		nbChar=0;
+		//reset boolean and draw the next level
+		if (level==5) didEnd=true;
+		else{level++;
 		didWin=false;
-		readCsv();
+		nbChar=0;
+		readCsv();}
+		repaint();
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
+
+		//set the direction boolean to false if the key is released
 		if(e.getKeyCode()==KeyEvent.VK_LEFT){
 			toucheLeft=false;
 		}
@@ -551,7 +513,6 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 		if(e.getKeyCode()==KeyEvent.VK_DOWN){
 			toucheDown=false;
 		}
-
 	}
 
 	@Override
@@ -561,30 +522,53 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		//if something happen, update the game
 		simulate();
 		repaint();
+
+		//if the end, ask if the player want to find the treasure again, or run away with what he already have
+		if (didEnd){
+			Timer timer = new Timer(1000, new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					ctEnd++;
+					if(ctEnd==3){
+						if (JOptionPane.showConfirmDialog(null, "Do you want to play again ?", "", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+							Menu returnPage = new Menu();
+							returnPage.setVisible(true);
+							setVisible(false);
+							((Timer)e.getSource()).stop();
+						} else {
+							System.exit(0);
+						}
+					}
+				}
+			});
+			this.setVisible(true);
+			timer.start();}
+
 	}
 
 	public void gestionPlayer(Rectangle Screen){
 		Toolkit T = Toolkit.getDefaultToolkit();
 
+		//take the current coordinates of the player
 		int i= player.y/100;
 		int j=player.x/100;
-		
-		if(map[i][j].isObstacle) bug=true;
-		
-		if(counter == 0){
-		if(toucheUp || movingUp){
 
-			//if(!(i==1 && (map[i-1][j].hasBox))){
-			if((i!=0 && !(map[i-1][j].isObstacle))|| didWin){
-				this.movingUp = true;
-				movePlayer = true;
-				sx = player.x;
-				sy = player.y;
-				
+		if(counter == 0){
+			//when the player touch the up key or is moving up (for animation)
+			if(toucheUp || movingUp){
+				//check the condition for the player to move (nothing upward)
+				if((i!=0 && !(map[i-1][j].isObstacle))|| (didWin&&(i!=0 && !(map[i-1][j].isObstacle)))){
+					this.movingUp = true;
+					movePlayer = true;
+					sx = player.x;
+					sy = player.y;
+
 				}
-			
+				//can the player push the box ? he can only push one at a time, and if there is no wall
 				if((i%6!=1 && i%6!=0 && map[i-1][j] instanceof Box)&&(!(map[i-2][j].isObstacle))) {
 
 					movingUp = true;
@@ -593,27 +577,25 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					bsy = map[i-1][j].y;
 					bi = i-2;
 					bj = j;
-					
-					
+
+
 
 					map[i-1][j] = new Skin();
 					map[i-1][j].x = (j)*100;
 					map[i-1][j].y = (i-1)*100;
 
-				}
-				
-				
-				
-	
-			
-		}else if(toucheDown || movingDown){
-			if((i!=5 && !(map[i+1][j].isObstacle)) || didWin){
-				this.movingDown = true;
-				movePlayer = true;
-				sx = player.x;
-				sy = player.y;
+				}	
 			}
-			if((i%6!=4 && i%6!=5 && map[i+1][j] instanceof Box)&&(!(map[i+2][j].isObstacle))) {
+
+			//if you read the one for up, it's the same for the others 3
+			else if(toucheDown || movingDown){
+				if((i!=5 && !(map[i+1][j].isObstacle)) || (didWin&&(i!=5 && !(map[i+1][j].isObstacle)))){
+					this.movingDown = true;
+					movePlayer = true;
+					sx = player.x;
+					sy = player.y;
+				}
+				if((i%6!=4 && i%6!=5 && map[i+1][j] instanceof Box)&&(!(map[i+2][j].isObstacle))) {
 
 					movingDown = true;
 					moveBox = true;
@@ -621,22 +603,22 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					bsy = map[i+1][j].y;
 					bi = i+2;
 					bj = j;
-					
-					
 
 					map[i+1][j] = new Skin();
 					map[i+1][j].x = (j)*100;
 					map[i+1][j].y = (i+1)*100;
 
 				}
-		}else if(toucheLeft || movingLeft){
-			if((j!=0 && !(map[i][j-1].isObstacle)) || didWin){
-				this.movingLeft = true;
-				movePlayer = true;
-				sx = player.x;
-				sy = player.y;
 			}
-			if(j%6!=0 && j%6!=1 && map[i][j-1] instanceof Box && (!(map[i][j-2].isObstacle))) {
+
+			else if(toucheLeft || movingLeft){
+				if((j!=0 && !(map[i][j-1].isObstacle)) || (didWin&&(j!=0 && !(map[i][j-1].isObstacle)))){
+					this.movingLeft = true;
+					movePlayer = true;
+					sx = player.x;
+					sy = player.y;
+				}
+				if((j%6!=0 && j%6!=1 && map[i][j-1] instanceof Box) && (!(map[i][j-2].isObstacle))) {
 
 					movingLeft = true;
 					moveBox = true;
@@ -644,22 +626,22 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					bsy = map[i][j-1].y;
 					bi = i;
 					bj = j-2;
-					
-					
 
 					map[i][j-1] = new Skin();
 					map[i][j-1].x = (j-1)*100;
 					map[i][j-1].y = (i)*100;
 
 				}
-		}else if(toucheRight || movingRight){
-			if((j!=5 && !(map[i][j+1].isObstacle)) || didWin){
-				movingRight = true;
-				movePlayer = true;
-				sx = player.x;
-				sy = player.y;
 			}
-			if((j%6!=4 && j%6!=5 && map[i][j+1] instanceof Box) && (!(map[i][j+2].isObstacle))) {
+
+			else if(toucheRight || movingRight){
+				if((j!=5 && !(map[i][j+1].isObstacle)) || (didWin&&(j!=5 && !(map[i][j+1].isObstacle)))){
+					movingRight = true;
+					movePlayer = true;
+					sx = player.x;
+					sy = player.y;
+				}
+				if((j%6!=4 && j%6!=5 && map[i][j+1] instanceof Box) && (!(map[i][j+2].isObstacle))) {
 
 					movingRight = true;
 					moveBox = true;
@@ -667,17 +649,16 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 					bsy = map[i][j+1].y;
 					bi = i;
 					bj = j+2;
-					
-					
 
 					map[i][j+1] = new Skin();
 					map[i][j+1].x = (j+1)*100;
 					map[i][j+1].y = (i)*100;
 
 				}
-		}	
+			}	
+		}
 	}
-}
 
 }
+
 
